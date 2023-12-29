@@ -1,3 +1,3 @@
 # astarpathfinder
-Implementation of AStar pathfinder algorithmn through pygame
+Implementation of AStar pathfinder algorithm through pygame
 
