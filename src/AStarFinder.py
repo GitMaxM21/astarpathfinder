@@ -2,7 +2,7 @@ import pygame
 import math
 from queue import PriorityQueue
 
-WIDTH =  800
+WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("A* Path Finding Algorithm")
 
@@ -71,8 +71,6 @@ class Node:
 
     def update_neighbors(self, grid):
         self.neighbors = []
-        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # DOWN
-            self.neighbors.append(grid[self.row + 1][self.col])
 
         if self.row > 0 and not grid[self.row - 1][self.col].is_barrier(): # UP
             self.neighbors.append(grid[self.row - 1][self.col])
@@ -80,23 +78,43 @@ class Node:
         if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier(): # RIGHT
             self.neighbors.append(grid[self.row][self.col + 1])
 
+        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # DOWN
+            self.neighbors.append(grid[self.row + 1][self.col])
+
         if self.col > 0 and not grid[self.row][self.col - 1].is_barrier(): # LEFT
             self.neighbors.append(grid[self.row][self.col - 1])
+
+        # Create toggle for diagonals
+        if self.row > 0 and self.col > 0 and not grid[self.row - 1][self.col - 1].is_barrier(): # UP LEFT
+            self.neighbors.append(grid[self.row - 1][self.col - 1])
+
+        if self.row > 0 and self.col < self.total_rows - 1 and not grid[self.row - 1][self.col + 1].is_barrier(): # UP RIGHT
+            self.neighbors.append(grid[self.row - 1][self.col + 1])
+
+        if self.row < self.total_rows - 1 and self.col < self.total_rows - 1 and not grid[self.row + 1][self.col + 1].is_barrier(): # DOWN RIGHT
+            self.neighbors.append(grid[self.row + 1][self.col + 1])
+
+        if self.row < self.total_rows - 1 and self.col > 0 and not grid[self.row + 1][self.col - 1].is_barrier(): # DOWN LEFT
+            self.neighbors.append(grid[self.row + 1][self.col - 1])
 
     def __lt__(self, other):
         return False
 
-def heuristic_man(p1, p2):
+def h_man(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
     return abs(x1 - x2) + abs(y1 - y2)
 
-def heuristic_euc(p1, p2):
+def h_oct(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
+    f = math.sqrt(2) - 1
     dx = abs(x1 - x2)
     dy = abs(y1 - y2)
-    return math.sqrt(dx * dx + dy * dy)
+    if(dx < dy):
+        return f * dx + dy
+    else:
+        return f * dy + dx
 
 def reconstruct_path(came_from, current, draw):
     while current in came_from:
@@ -112,7 +130,7 @@ def algorithm(draw, grid, start, end):
     g_score = {node: float("inf") for row in grid for node in row}
     g_score[start] = 0
     f_score = {node: float("inf") for row in grid for node in row}
-    f_score[start] = heuristic_man(start.get_pos(), end.get_pos())
+    f_score[start] = h_oct(start.get_pos(), end.get_pos())
 
     open_set_hash = {start}
 
@@ -130,12 +148,15 @@ def algorithm(draw, grid, start, end):
             return True
 
         for neighbor in current.neighbors:
-            temp_g_score = g_score[current] + 1
+            if current.x - neighbor.x == 0 or current.y - neighbor.y == 0:
+                temp_g_score = g_score[current] + 1
+            else:
+                temp_g_score = g_score[current] + math.sqrt(2)
 
             if temp_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
-                g_score[neighbor] = temp_g_score
-                f_score[neighbor] = temp_g_score + heuristic_man(neighbor.get_pos(), end.get_pos())
+                g_score[neighbor] = temp_g_score #Add to next line for it to work
+                f_score[neighbor] = h_oct(neighbor.get_pos(), end.get_pos())
                 if neighbor not in open_set_hash:
                     count += 1
                     open_set.put((f_score[neighbor], count, neighbor))
@@ -148,7 +169,6 @@ def algorithm(draw, grid, start, end):
             current.make_closed()
 
     return False
-
 
 def make_grid(rows, width):
     grid = []
@@ -235,6 +255,11 @@ def main(win, width):
                     algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end)
 
                 if event.key == pygame.K_c:
+                    start = None
+                    end = None
+                    grid = make_grid(ROWS, width)
+
+                if event.key == pygame.K_1:
                     start = None
                     end = None
                     grid = make_grid(ROWS, width)
