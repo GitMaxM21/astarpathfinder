@@ -2,6 +2,24 @@ import pygame
 import math
 from queue import PriorityQueue
 
+"""
+---------------------------------------------------------
+File Name: <AStarFinder>.py
+Author: <Max Morris>
+Date Created: <12/21/23>
+Last Modified: <4/7/24>
+Description:
+    Implementation of AStar pathfinder algorithm through pygame
+
+    Click down on the grid to place a green start node and a red end node on the grid. 
+    You can also place black barrier nodes by clicking in the grid.
+
+    Press the SPACEBAR to start a search after placing the start and end nodes.
+    
+    Press the C key to reset the grid.
+---------------------------------------------------------
+"""
+
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("A* Path Finding Algorithm")
